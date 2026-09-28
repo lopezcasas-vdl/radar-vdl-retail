@@ -1,0 +1,138 @@
+{
+  "name": "Radar VdL · Centros comerciales",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "radar-vdl",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://valordeley.es"
+        }
+      },
+      "id": "a1",
+      "name": "Webhook Radar VdL",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "radar-vdl"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "body.pdfBase64",
+        "binaryPropertyName": "pdf",
+        "options": {
+          "fileName": "={{ $json.body.fileName || 'Radar-VdL.pdf' }}",
+          "mimeType": "application/pdf"
+        }
+      },
+      "id": "a2",
+      "name": "PDF a archivo",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"ok\":true}",
+        "options": {}
+      },
+      "id": "a3",
+      "name": "Responder OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "comercial@valordeley.es",
+        "toEmail": "comercial@valordeley.es",
+        "subject": "=Nuevo lead Radar VdL · {{ $('Webhook Radar VdL').item.json.body.center }}",
+        "emailFormat": "html",
+        "html": "=<div style=\"font-family:Arial,sans-serif;max-width:640px\"><h2 style=\"color:#12103a\">Nuevo lead · Radar VdL Centros comerciales</h2><table style=\"border-collapse:collapse;border:1px solid #e3e3ea\"><tr><td style=\"padding:6px 12px;color:#5b5770\">Nombre</td><td style=\"padding:6px 12px;color:#12103a\"><b>{{ $('Webhook Radar VdL').item.json.body.name || '—' }}</b></td></tr><tr><td style=\"padding:6px 12px;color:#5b5770\">Cargo</td><td style=\"padding:6px 12px;color:#12103a\"><b>{{ $('Webhook Radar VdL').item.json.body.role || '—' }}</b></td></tr><tr><td style=\"padding:6px 12px;color:#5b5770\">Email</td><td style=\"padding:6px 12px;color:#12103a\"><b>{{ $('Webhook Radar VdL').item.json.body.email || '—' }}</b></td></tr><tr><td style=\"padding:6px 12px;color:#5b5770\">Teléfono</td><td style=\"padding:6px 12px;color:#12103a\"><b>{{ $('Webhook Radar VdL').item.json.body.phone || '—' }}</b></td></tr><tr><td style=\"padding:6px 12px;color:#5b5770\">Centro</td><td style=\"padding:6px 12px;color:#12103a\"><b>{{ $('Webhook Radar VdL').item.json.body.center || '—' }}</b></td></tr><tr><td style=\"padding:6px 12px;color:#5b5770\">Municipio</td><td style=\"padding:6px 12px;color:#12103a\"><b>{{ $('Webhook Radar VdL').item.json.body.city || '—' }}</b></td></tr><tr><td style=\"padding:6px 12px;color:#5b5770\">Provincia</td><td style=\"padding:6px 12px;color:#12103a\"><b>{{ $('Webhook Radar VdL').item.json.body.province || '—' }}</b></td></tr><tr><td style=\"padding:6px 12px;color:#5b5770\">SBA (m²)</td><td style=\"padding:6px 12px;color:#12103a\"><b>{{ $('Webhook Radar VdL').item.json.body.sba || '—' }}</b></td></tr><tr><td style=\"padding:6px 12px;color:#5b5770\">Afluencia estimada (visitas/año)</td><td style=\"padding:6px 12px;color:#12103a\"><b>{{ $('Webhook Radar VdL').item.json.body.visitsEstimate || '—' }}</b></td></tr><tr><td style=\"padding:6px 12px;color:#5b5770\">Personas identificadas</td><td style=\"padding:6px 12px;color:#12103a\"><b>{{ $('Webhook Radar VdL').item.json.body.knownContacts || '—' }}</b></td></tr><tr><td style=\"padding:6px 12px;color:#5b5770\">Centros en cartera</td><td style=\"padding:6px 12px;color:#12103a\"><b>{{ $('Webhook Radar VdL').item.json.body.centersInGroup || '—' }}</b></td></tr><tr><td style=\"padding:6px 12px;color:#5b5770\">Nota global (/100)</td><td style=\"padding:6px 12px;color:#12103a\"><b>{{ $('Webhook Radar VdL').item.json.body.score || '—' }}</b></td></tr><tr><td style=\"padding:6px 12px;color:#5b5770\">Nivel</td><td style=\"padding:6px 12px;color:#12103a\"><b>{{ $('Webhook Radar VdL').item.json.body.level || '—' }}</b></td></tr></table><p style=\"color:#262247\"><b>Ejes:</b> {{ Object.entries(JSON.parse($('Webhook Radar VdL').item.json.body.data).scores).filter(([k])=>k!=='total').map(([k,v])=>k+': '+v+'/100').join(' · ') }}</p><p style=\"color:#5b5770\">Informe PDF adjunto. Fecha: {{ $('Webhook Radar VdL').item.json.body.createdAt }}</p></div>",
+        "options": {
+          "attachments": "pdf",
+          "replyTo": "={{ $('Webhook Radar VdL').item.json.body.email }}"
+        }
+      },
+      "id": "a4",
+      "name": "Email a comercial",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "comercial@valordeley.es",
+        "toEmail": "={{ $('Webhook Radar VdL').item.json.body.email }}",
+        "subject": "=Tu diagnóstico Radar VdL · {{ $('Webhook Radar VdL').item.json.body.center }}",
+        "emailFormat": "html",
+        "html": "=<div style=\"font-family:Arial,sans-serif;max-width:600px;color:#262247\"><p>Hola {{ $('Webhook Radar VdL').item.json.body.name.split(' ')[0] }},</p><p>Gracias por completar el Radar VdL. Te adjuntamos el diagnóstico de <b>{{ $('Webhook Radar VdL').item.json.body.center }}</b>: nota global <b>{{ $('Webhook Radar VdL').item.json.body.score }}/100</b>, resultados por eje y por dónde empezar.</p><p>Si quieres revisarlo con nosotros, reserva 30 minutos aquí:<br><a href=\"https://calendly.com/joseluis-gonzalez-7fnd/marketing-digital-e-innovacion\">https://calendly.com/joseluis-gonzalez-7fnd/marketing-digital-e-innovacion</a></p><p>Un saludo,<br>Equipo de Valor de Ley<br><a href=\"https://valordeley.es\">valordeley.es</a></p></div>",
+        "options": {
+          "attachments": "pdf",
+          "replyTo": "comercial@valordeley.es"
+        }
+      },
+      "id": "a5",
+      "name": "Email al lead",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        480
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Radar VdL": {
+      "main": [
+        [
+          {
+            "node": "PDF a archivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF a archivo": {
+      "main": [
+        [
+          {
+            "node": "Responder OK",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email a comercial",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email al lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
